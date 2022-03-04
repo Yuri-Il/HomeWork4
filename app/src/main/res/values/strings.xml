@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name" translatable="false">HomeWork4</string>
+    <string name="button">Button</string>
+    <string name="number">number</string>
+    <string name="one">ONE</string>
+    <string name="two">TWO</string>
+    <string name="three">THREE</string>
+</resources>
