@@ -1,45 +1,61 @@
 package com.example.homework4
 
-import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.RecyclerView
 import com.example.homework4.databinding.ActivityMainBinding
 
+
+const val BUTTON_VISIBILITY_KEY = "BUTTON_VISIBILITY_KEY"
+const val ITEM_COUNT_KEY = "ITEM_COUNT_KEY"
+
 class MainActivity : AppCompatActivity() {
+
     private lateinit var binding: ActivityMainBinding
-    private var imageNumber: Int = 1
-    private val images = buildMap {
-        put(1, R.drawable.one)
-        put(2, R.drawable.two)
-        put(3, R.drawable.three)
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.buttonToFragment.setOnClickListener {
+            addContactsFragment()
+            it.visibility = View.GONE
+        }
     }
 
-    private val getResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        imageNumber = it.resultCode
-        binding.imageViewId.setImageResource(images.getValue(imageNumber))
-    }
-
-    fun openSecondActivity(view: View) {
-        val intent = Intent(this, Activity2::class.java)
-        getResult.launch(intent)
+    private fun addContactsFragment() {
+        supportFragmentManager.beginTransaction()
+            .setReorderingAllowed(true)
+            .add(R.id.fragmentContainerView, ContactsFragment())
+            .commit()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putInt("IMAGE_KEY", imageNumber)
+        val buttonVisibility = binding.buttonToFragment.visibility
+        outState.putInt(BUTTON_VISIBILITY_KEY, buttonVisibility)
+        if (buttonVisibility == View.GONE) {
+            val fragment = binding.fragmentContainerView.getFragment<ContactsFragment>()
+            val recycler = fragment.view?.findViewById<RecyclerView>(R.id.recyclerViewId)
+            val itemCount = recycler?.adapter?.itemCount
+            if (itemCount != null) {
+                outState.putInt(ITEM_COUNT_KEY, itemCount)
+            }
+        }
         super.onSaveInstanceState(outState)
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
         super.onRestoreInstanceState(savedInstanceState)
-        imageNumber = savedInstanceState.getInt("IMAGE_KEY")
-        binding.imageViewId.setImageResource(images.getValue(imageNumber))
+        val buttonVisibility = savedInstanceState.getInt(BUTTON_VISIBILITY_KEY)
+        val itemCount = savedInstanceState.getInt(ITEM_COUNT_KEY)
+        binding.buttonToFragment.visibility = buttonVisibility
+        if (buttonVisibility == View.GONE) {
+            val fragment = binding.fragmentContainerView.getFragment<ContactsFragment>()
+            val recycler = fragment.view?.findViewById<RecyclerView>(R.id.recyclerViewId)
+            if (recycler != null && itemCount > 0) {
+                fragment.showContacts()
+            }
+        }
     }
 }
